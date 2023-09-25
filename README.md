@@ -2,7 +2,7 @@
 
 This is a Dice Game built with React JS.
 
-Site: https://dice-react.netlify.app/
+Site: https://dice-game-tau-three.vercel.app/
 
 ## Technologies
 

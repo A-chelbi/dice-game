@@ -19,9 +19,20 @@ const diceImages = [
   DiceImage6,
 ];
 
+type THistory = {
+  id: number;
+  text: string;
+  value: number;
+}[];
+
 const Dice: React.FC = (): JSX.Element => {
   const [userTurn, setUserTurn] = useState(1);
   const [score, setScore] = useState(0);
+  const [currentTurn, setCurrentTurn] = useState(1);
+  const [isDisabled, setIsDisabled] = useState(false);
+
+  const [history, setHistory] = useState<THistory>([]);
+
   const [dice1, setDice1] = useState(diceImages[0]);
   const [dice2, setDice2] = useState(diceImages[1]);
 
@@ -35,30 +46,93 @@ const Dice: React.FC = (): JSX.Element => {
   const numbOfUsersValue = watch("numbOfUsers");
   const numbOfTurnsValue = watch("numbOfTurns");
 
+  /* Dice roll logic */
   const handleRoll = () => {
     // Generate random number
     const firstRandomNum = Math.floor(Math.random() * 6);
     const secondRandomNum = Math.floor(Math.random() * 6);
 
+    // Calculate score
+    const currentScore = firstRandomNum + secondRandomNum + 2;
+
+    // Set rolled dice images
     setDice1(diceImages[firstRandomNum]);
     setDice2(diceImages[secondRandomNum]);
 
-    setScore(firstRandomNum + secondRandomNum + 2);
-    setUserTurn(userTurn + 1);
+    setScore(currentScore);
+
+    // Update current user turn
+    if (userTurn <= numbOfUsersValue - 1) {
+      setUserTurn(userTurn + 1);
+    } else {
+      setUserTurn(1);
+    }
+
+    // Update current game turn
+    setCurrentTurn(currentTurn + 1);
+
+    setHistory((prev) => [
+      ...prev,
+      {
+        id: prev.length,
+        text: `Joueur ${userTurn} a un score de ${currentScore} points`,
+        value: currentScore,
+      },
+    ]);
+
+    // Finish the game
+    if (currentTurn >= numbOfTurnsValue) {
+      console.log("object");
+      handleFinishGame();
+    }
   };
 
+  /* Finish the game Game */
+  const handleFinishGame = () => {
+    setIsDisabled(true);
+
+    setTimeout(() => {
+      console.log("finish");
+      const winner = getWinner(history);
+      alert(`Felicitation : ${winner?.text}`);
+    }, 1000);
+  };
+
+  /* Rest Game */
   const handleReset = () => {
     setScore(0);
+    setIsDisabled(false);
+
+    setUserTurn(1);
+    setCurrentTurn(1);
+
+    setHistory([]);
   };
 
-  console.log(numbOfUsersValue, "numbOfUsersValue");
-  console.log(numbOfTurnsValue, "numbOfTurnsValue");
+  const getWinner = (history: THistory) => {
+    // Todo: consider multiple winners
+    let winnerScore = 0;
+    let winner = null;
 
-  // Todo: Set number of users with default values
-  // Todo: Set number games with default values
-  // Todo: start game for each user and save results
-  // Todo: Show results in table
-  // Todo: Rest game
+    for (let i = 0; i < history.length; i++) {
+      console.log(history.length, "history length");
+      console.log(history[i]);
+      if (history[i].value > winnerScore) {
+        winnerScore = history[i].value;
+        winner = history[i];
+      }
+    }
+
+    return winner;
+  };
+
+  // Todo: Set number of users with default values ----OK
+  // Todo: Set number games with default values -----OK
+  // Todo: start game for each user and save results -----OK
+  // Todo: show current user playing and add score ---- OK
+  // Todo: Show results in table ---- OK
+  // Todo: define the winner of the game ----OK
+  // Todo: Reset game ---- OK
 
   return (
     <div className="relative isolate px-6 pt-14 lg:px-8">
@@ -84,7 +158,7 @@ const Dice: React.FC = (): JSX.Element => {
           <img
             className={
               userTurn === 4
-                ? `h-20 w-20 flex-none rounded-full bg-gray-50 ml-auto ring-4 mr-1 mt-1`
+                ? `h-20 w-20 flex-none rounded-full bg-gray-50 ml-auto ring-4 ring-red-600 mr-1 mt-1`
                 : `h-20 w-20 flex-none rounded-full bg-gray-50 ml-auto`
             }
             alt="user"
@@ -104,7 +178,7 @@ const Dice: React.FC = (): JSX.Element => {
           <img
             className={
               userTurn === 3
-                ? `h-20 w-20 flex-none rounded-full bg-gray-50 ring-4 ml-1 mt-1`
+                ? `h-20 w-20 flex-none rounded-full bg-gray-50 ring-4 ring-red-600 ml-1 mt-1`
                 : `h-20 w-20 flex-none rounded-full bg-gray-50`
             }
             alt="user"
@@ -117,10 +191,15 @@ const Dice: React.FC = (): JSX.Element => {
       <div className="mx-auto max-w-2xl py-20 sm:py-25 lg:py-35">
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <p className="mt-6 text-lg leading-8 text-gray-600">
+            Joueur : {userTurn}
+          </p>
+          <p className="mt-6 text-lg leading-8 text-gray-600">
             Nombre des joueurs : {numbOfUsersValue}
           </p>
           <p className="mt-6 text-lg leading-8 text-gray-600">
-            Nombre de tours : {numbOfTurnsValue}
+            Nombre du tour :{" "}
+            {currentTurn >= numbOfTurnsValue ? numbOfTurnsValue : currentTurn} /
+            {numbOfTurnsValue}
           </p>
         </div>
         <div className="text-center">
@@ -130,13 +209,14 @@ const Dice: React.FC = (): JSX.Element => {
           </div>
 
           <p className="mt-6 text-lg leading-8 text-gray-600">
-            Score : {score}{" "}
+            Score : {score}
           </p>
 
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <button
-              className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              className="disabled:opacity-50 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               onClick={handleRoll}
+              disabled={isDisabled}
             >
               Lancer
             </button>
@@ -149,6 +229,14 @@ const Dice: React.FC = (): JSX.Element => {
               Reset
             </button>
           </div>
+        </div>
+
+        <div className="mt-5">
+          <ul>
+            {history.map((item) => (
+              <li key={item.id}>{item.text}</li>
+            ))}
+          </ul>
         </div>
       </div>
 
@@ -165,7 +253,7 @@ const Dice: React.FC = (): JSX.Element => {
         ></div>
       </div>
 
-      {/* User number 3 */}
+      {/* User number 1 */}
       <div
         className="absolute inset-x-0 bottom-0 left-10 -z-10 transform-gpu overflow-hidden"
         aria-hidden="true"
@@ -173,7 +261,7 @@ const Dice: React.FC = (): JSX.Element => {
         <img
           className={
             userTurn === 1
-              ? `h-20 w-20 flex-none top-0 rounded-full bg-gray-50  ml-1 mt-1 ring-4`
+              ? `h-20 w-20 flex-none top-0 rounded-full bg-gray-50  ml-1 mt-1 ring-4 ring-red-600`
               : `h-20 w-20 flex-none top-0 rounded-full bg-gray-50 `
           }
           alt="user"
@@ -191,7 +279,7 @@ const Dice: React.FC = (): JSX.Element => {
         <img
           className={
             userTurn === 2
-              ? `h-20 w-20 flex-none top-0 rounded-full bg-gray-50 ml-auto mr-1 mt-1 ring-4`
+              ? `h-20 w-20 flex-none top-0 rounded-full bg-gray-50 ml-auto mr-1 mt-1 ring-4 ring-red-600`
               : `h-20 w-20 flex-none top-0 rounded-full bg-gray-50 ml-auto`
           }
           alt="user"
