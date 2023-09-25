@@ -6,9 +6,14 @@ import DiceImage3 from "../../../images/dice3.svg";
 import DiceImage4 from "../../../images/dice4.svg";
 import DiceImage5 from "../../../images/dice5.svg";
 import DiceImage6 from "../../../images/dice6.svg";
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { IFormInput } from "../../../types";
+import { IFormInput, THistory } from "../../../types";
+import DesignElementTopLeft from "../DesigneElements/DesignElementTopLeft";
+import DesignElementBottom from "../DesigneElements/DesignElementBottom";
+import History from "../History/History";
+import WinnerModal from "../WinnerModal/WinnerModal";
 
 const diceImages = [
   DiceImage1,
@@ -18,12 +23,6 @@ const diceImages = [
   DiceImage5,
   DiceImage6,
 ];
-
-type THistory = {
-  id: number;
-  text: string;
-  value: number;
-}[];
 
 const Dice: React.FC = (): JSX.Element => {
   const [userTurn, setUserTurn] = useState(1);
@@ -38,6 +37,9 @@ const Dice: React.FC = (): JSX.Element => {
 
   const [dice1, setDice1] = useState(diceImages[0]);
   const [dice2, setDice2] = useState(diceImages[1]);
+
+  const [winnerModalOpen, setwinnerModalOpen] = useState(false);
+  const [winners, setWinners] = useState<THistory>([]);
 
   const { register, watch } = useForm<IFormInput>({
     defaultValues: {
@@ -58,7 +60,7 @@ const Dice: React.FC = (): JSX.Element => {
     // Calculate score
     const currentScore = firstRandomNum + secondRandomNum + 2;
 
-    // Calculate total numb of rolls
+    // Calculate total number of rolls
     const totalTurns = numbOfRoundsValue * numbOfUsersValue;
 
     // Set rolled dice images
@@ -88,7 +90,6 @@ const Dice: React.FC = (): JSX.Element => {
     ]);
 
     // Finish the game
-    console.log("round", round);
     if (currentTurn >= totalTurns) {
       handleFinishGame();
     }
@@ -99,8 +100,11 @@ const Dice: React.FC = (): JSX.Element => {
     setIsDisabled(true);
 
     setTimeout(() => {
-      const winner = getWinner(history);
-      alert(`Felicitation : ${winner?.text}`);
+      const { maxWinners } = getWinner(history);
+      console.log(maxWinners, "max");
+      // alert(`Felicitation : ${winner?.text}`);
+      setwinnerModalOpen(true);
+      setWinners(maxWinners);
     }, 1000);
   };
 
@@ -117,36 +121,24 @@ const Dice: React.FC = (): JSX.Element => {
   };
 
   const getWinner = (history: THistory) => {
-    // Todo: consider multiple winners
-    let winnerScore = 0;
-    let winner = null;
+    let maxWinners = [];
+    let max = -13;
 
-    for (let i = 0; i < history.length; i++) {
-      console.log(history.length, "history length");
-      console.log(history[i]);
-      if (history[i].value > winnerScore) {
-        winnerScore = history[i].value;
-        winner = history[i];
+    for (let i = 0; i < history.length; ++i) {
+      if (history[i].value < max) continue;
+      if (history[i].value > max) {
+        maxWinners = [];
+        max = history[i].value;
       }
+      maxWinners.push(history[i]);
     }
 
-    return winner;
+    return { maxWinners };
   };
 
   return (
     <div className="relative isolate px-6 pt-14 lg:px-8">
-      <div
-        className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
-        aria-hidden="true"
-      >
-        <div
-          className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
-          style={{
-            clipPath:
-              "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-          }}
-        ></div>
-      </div>
+      <DesignElementTopLeft />
 
       {/* User numbr 4 avatar */}
       {numbOfUsersValue === 4 && (
@@ -220,6 +212,7 @@ const Dice: React.FC = (): JSX.Element => {
               Lancer
             </button>
           </div>
+
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <button
               className="rounded-md px-3.5 py-2.5 text-sm font-semibold text-indigo-600 shadow-sm border border-indigo-600 hover:bg-indigo-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
@@ -229,28 +222,11 @@ const Dice: React.FC = (): JSX.Element => {
             </button>
           </div>
         </div>
-
-        <div className="mt-5">
-          <ul>
-            {history.map((item) => (
-              <li key={item.id}>{item.text}</li>
-            ))}
-          </ul>
-        </div>
       </div>
 
-      <div
-        className="absolute inset-x-0 top-[calc(100%-41rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-40rem)]"
-        aria-hidden="true"
-      >
-        <div
-          className="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]"
-          style={{
-            clipPath:
-              "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-          }}
-        ></div>
-      </div>
+      <History history={history} />
+
+      <DesignElementBottom />
 
       {/* User number 1 */}
       <div
@@ -290,6 +266,13 @@ const Dice: React.FC = (): JSX.Element => {
 
       {/* Game settings Modal */}
       <GameSettings register={register} />
+
+      {/* Winner(s) Modal */}
+      <WinnerModal
+        open={winnerModalOpen}
+        setOpen={setwinnerModalOpen}
+        winners={winners}
+      />
     </div>
   );
 };
