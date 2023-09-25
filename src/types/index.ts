@@ -1,4 +1,4 @@
 export interface IFormInput {
-  numbOfTurns: number;
+  numbOfRounds: number;
   numbOfUsers: number;
 }

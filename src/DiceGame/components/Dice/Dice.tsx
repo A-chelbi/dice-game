@@ -28,7 +28,10 @@ type THistory = {
 const Dice: React.FC = (): JSX.Element => {
   const [userTurn, setUserTurn] = useState(1);
   const [score, setScore] = useState(0);
+
+  const [round, setRound] = useState(1);
   const [currentTurn, setCurrentTurn] = useState(1);
+
   const [isDisabled, setIsDisabled] = useState(false);
 
   const [history, setHistory] = useState<THistory>([]);
@@ -39,12 +42,12 @@ const Dice: React.FC = (): JSX.Element => {
   const { register, watch } = useForm<IFormInput>({
     defaultValues: {
       numbOfUsers: 2,
-      numbOfTurns: 3,
+      numbOfRounds: 3,
     },
   });
 
   const numbOfUsersValue = watch("numbOfUsers");
-  const numbOfTurnsValue = watch("numbOfTurns");
+  const numbOfRoundsValue = watch("numbOfRounds");
 
   /* Dice roll logic */
   const handleRoll = () => {
@@ -54,6 +57,9 @@ const Dice: React.FC = (): JSX.Element => {
 
     // Calculate score
     const currentScore = firstRandomNum + secondRandomNum + 2;
+
+    // Calculate total numb of rolls
+    const totalTurns = numbOfRoundsValue * numbOfUsersValue;
 
     // Set rolled dice images
     setDice1(diceImages[firstRandomNum]);
@@ -66,6 +72,7 @@ const Dice: React.FC = (): JSX.Element => {
       setUserTurn(userTurn + 1);
     } else {
       setUserTurn(1);
+      setRound(round + 1);
     }
 
     // Update current game turn
@@ -81,8 +88,8 @@ const Dice: React.FC = (): JSX.Element => {
     ]);
 
     // Finish the game
-    if (currentTurn >= numbOfTurnsValue) {
-      console.log("object");
+    console.log("round", round);
+    if (currentTurn >= totalTurns) {
       handleFinishGame();
     }
   };
@@ -92,7 +99,6 @@ const Dice: React.FC = (): JSX.Element => {
     setIsDisabled(true);
 
     setTimeout(() => {
-      console.log("finish");
       const winner = getWinner(history);
       alert(`Felicitation : ${winner?.text}`);
     }, 1000);
@@ -105,6 +111,7 @@ const Dice: React.FC = (): JSX.Element => {
 
     setUserTurn(1);
     setCurrentTurn(1);
+    setRound(1);
 
     setHistory([]);
   };
@@ -125,14 +132,6 @@ const Dice: React.FC = (): JSX.Element => {
 
     return winner;
   };
-
-  // Todo: Set number of users with default values ----OK
-  // Todo: Set number games with default values -----OK
-  // Todo: start game for each user and save results -----OK
-  // Todo: show current user playing and add score ---- OK
-  // Todo: Show results in table ---- OK
-  // Todo: define the winner of the game ----OK
-  // Todo: Reset game ---- OK
 
   return (
     <div className="relative isolate px-6 pt-14 lg:px-8">
@@ -198,8 +197,8 @@ const Dice: React.FC = (): JSX.Element => {
           </p>
           <p className="mt-6 text-lg leading-8 text-gray-600">
             Nombre du tour :{" "}
-            {currentTurn >= numbOfTurnsValue ? numbOfTurnsValue : currentTurn} /
-            {numbOfTurnsValue}
+            {round >= numbOfRoundsValue ? numbOfRoundsValue : round} /
+            {numbOfRoundsValue}
           </p>
         </div>
         <div className="text-center">
