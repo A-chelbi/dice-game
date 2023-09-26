@@ -1,11 +1,11 @@
 import { Fragment, useRef } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { THistory } from "../../../types";
+import { TPlayer } from "../../../types";
 
 interface IWinnerModalProps {
   open: boolean;
   setOpen: any;
-  winners: THistory;
+  winners: TPlayer[];
 }
 
 const WinnerModal = ({
@@ -58,7 +58,11 @@ const WinnerModal = ({
                   <div className="mt-4">
                     <ul>
                       {winners.map((item) => (
-                        <li key={item.id}>{item.text}</li>
+                        <li key={item.id}>
+                          <b>{item.name}</b>
+                          <br />A GAGNER AVEC UN SCORE TOTAL DE :{" "}
+                          <b>{item.total}</b>
+                        </li>
                       ))}
                     </ul>
                   </div>

@@ -8,3 +8,10 @@ export type THistory = {
   text: string;
   value: number;
 }[];
+
+export type TPlayer = {
+  id: number;
+  name: string;
+  score: number;
+  total: number;
+};

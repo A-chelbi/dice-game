@@ -7,9 +7,9 @@ import DiceImage4 from "../../../images/dice4.svg";
 import DiceImage5 from "../../../images/dice5.svg";
 import DiceImage6 from "../../../images/dice6.svg";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { IFormInput, THistory } from "../../../types";
+import { IFormInput, THistory, TPlayer } from "../../../types";
 import DesignElementTopLeft from "../DesigneElements/DesignElementTopLeft";
 import DesignElementBottom from "../DesigneElements/DesignElementBottom";
 import History from "../History/History";
@@ -25,7 +25,9 @@ const diceImages = [
 ];
 
 const Dice: React.FC = (): JSX.Element => {
-  const [userTurn, setUserTurn] = useState(1);
+  const [players, setPlayers] = useState<TPlayer[]>([]);
+
+  const [currentPlayer, setCurrentPlayer] = useState(1);
   const [score, setScore] = useState(0);
 
   const [round, setRound] = useState(1);
@@ -33,13 +35,11 @@ const Dice: React.FC = (): JSX.Element => {
 
   const [isDisabled, setIsDisabled] = useState(false);
 
-  const [history, setHistory] = useState<THistory>([]);
-
   const [dice1, setDice1] = useState(diceImages[0]);
   const [dice2, setDice2] = useState(diceImages[1]);
 
   const [winnerModalOpen, setwinnerModalOpen] = useState(false);
-  const [winners, setWinners] = useState<THistory>([]);
+  const [winners, setWinners] = useState<TPlayer[]>([]);
 
   const { register, watch } = useForm<IFormInput>({
     defaultValues: {
@@ -51,7 +51,16 @@ const Dice: React.FC = (): JSX.Element => {
   const numbOfUsersValue = watch("numbOfUsers");
   const numbOfRoundsValue = watch("numbOfRounds");
 
-  /* Dice roll logic */
+  // Calculate total number of rolls
+  const totalTurns = numbOfRoundsValue * numbOfUsersValue;
+
+  /*
+   *  Dice roll logic
+   *
+   * Generate random numbers from 1 to 6 for each Dice
+   * Calculate the current score and append it to the current player
+   * Calculate the total score for each player
+   */
   const handleRoll = () => {
     // Generate random number
     const firstRandomNum = Math.floor(Math.random() * 6);
@@ -60,34 +69,27 @@ const Dice: React.FC = (): JSX.Element => {
     // Calculate score
     const currentScore = firstRandomNum + secondRandomNum + 2;
 
-    // Calculate total number of rolls
-    const totalTurns = numbOfRoundsValue * numbOfUsersValue;
+    const newPlayers = [...players]; // Get all players list
+
+    newPlayers[currentPlayer - 1].score = currentScore; // Update current player's score
+    newPlayers[currentPlayer - 1].total += currentScore; // Update current player's Total score
 
     // Set rolled dice images
     setDice1(diceImages[firstRandomNum]);
     setDice2(diceImages[secondRandomNum]);
 
-    setScore(currentScore);
+    setScore(currentScore); // Used mainly for showing current score in the page header
 
-    // Update current user turn
-    if (userTurn <= numbOfUsersValue - 1) {
-      setUserTurn(userTurn + 1);
+    // Update current player turn and rounds
+    if (currentPlayer <= numbOfUsersValue - 1) {
+      setCurrentPlayer(currentPlayer + 1);
     } else {
-      setUserTurn(1);
+      setCurrentPlayer(1);
       setRound(round + 1);
     }
 
     // Update current game turn
     setCurrentTurn(currentTurn + 1);
-
-    setHistory((prev) => [
-      ...prev,
-      {
-        id: prev.length,
-        text: `Joueur ${userTurn} a un score de ${currentScore} points`,
-        value: currentScore,
-      },
-    ]);
 
     // Finish the game
     if (currentTurn >= totalTurns) {
@@ -100,9 +102,8 @@ const Dice: React.FC = (): JSX.Element => {
     setIsDisabled(true);
 
     setTimeout(() => {
-      const { maxWinners } = getWinner(history);
-      console.log(maxWinners, "max");
-      // alert(`Felicitation : ${winner?.text}`);
+      const { maxWinners } = getWinner(players);
+
       setwinnerModalOpen(true);
       setWinners(maxWinners);
     }, 1000);
@@ -113,28 +114,42 @@ const Dice: React.FC = (): JSX.Element => {
     setScore(0);
     setIsDisabled(false);
 
-    setUserTurn(1);
+    setCurrentPlayer(1);
     setCurrentTurn(1);
     setRound(1);
 
-    setHistory([]);
+    for (let i = 0; i < numbOfUsersValue; ++i) {
+      players[i].score = 0;
+      players[i].total = 0;
+    }
   };
 
-  const getWinner = (history: THistory) => {
+  const getWinner = (players: TPlayer[]) => {
     let maxWinners = [];
     let max = -13;
 
-    for (let i = 0; i < history.length; ++i) {
-      if (history[i].value < max) continue;
-      if (history[i].value > max) {
+    for (let i = 0; i < players.length; ++i) {
+      if (players[i].total < max) continue;
+      if (players[i].total > max) {
         maxWinners = [];
-        max = history[i].value;
+        max = players[i].total;
       }
-      maxWinners.push(history[i]);
+      maxWinners.push(players[i]);
     }
 
     return { maxWinners };
   };
+
+  // Set players list
+  useEffect(() => {
+    let players = [];
+
+    for (let i = 0; i < numbOfUsersValue; ++i) {
+      players.push({ id: i + 1, name: `Joueur ${i + 1}`, score: 0, total: 0 });
+    }
+
+    setPlayers(players);
+  }, [numbOfUsersValue]);
 
   return (
     <div className="relative isolate px-6 pt-14 lg:px-8">
@@ -148,7 +163,7 @@ const Dice: React.FC = (): JSX.Element => {
         >
           <img
             className={
-              userTurn === 4
+              currentPlayer === 4
                 ? `h-20 w-20 flex-none rounded-full bg-gray-50 ml-auto ring-4 ring-red-600 mr-1 mt-1`
                 : `h-20 w-20 flex-none rounded-full bg-gray-50 ml-auto`
             }
@@ -168,7 +183,7 @@ const Dice: React.FC = (): JSX.Element => {
         >
           <img
             className={
-              userTurn === 3
+              currentPlayer === 3
                 ? `h-20 w-20 flex-none rounded-full bg-gray-50 ring-4 ring-red-600 ml-1 mt-1`
                 : `h-20 w-20 flex-none rounded-full bg-gray-50`
             }
@@ -179,10 +194,11 @@ const Dice: React.FC = (): JSX.Element => {
           <span className="relative right-[calc(50%-2rem)] ">Joueur 3</span>
         </div>
       )}
+
       <div className="mx-auto max-w-2xl py-20 sm:py-25 lg:py-35">
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <p className="mt-6 text-lg leading-8 text-gray-600">
-            Joueur : {userTurn}
+            Joueur : {currentPlayer}
           </p>
           <p className="mt-6 text-lg leading-8 text-gray-600">
             Nombre des joueurs : {numbOfUsersValue}
@@ -193,6 +209,7 @@ const Dice: React.FC = (): JSX.Element => {
             {numbOfRoundsValue}
           </p>
         </div>
+
         <div className="text-center">
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <img className="rounded-lg" src={dice1} alt="Dice" />
@@ -224,7 +241,7 @@ const Dice: React.FC = (): JSX.Element => {
         </div>
       </div>
 
-      <History history={history} />
+      <History players={players} />
 
       <DesignElementBottom />
 
@@ -235,7 +252,7 @@ const Dice: React.FC = (): JSX.Element => {
       >
         <img
           className={
-            userTurn === 1
+            currentPlayer === 1
               ? `h-20 w-20 flex-none top-0 rounded-full bg-gray-50  ml-1 mt-1 ring-4 ring-red-600`
               : `h-20 w-20 flex-none top-0 rounded-full bg-gray-50 `
           }
@@ -253,7 +270,7 @@ const Dice: React.FC = (): JSX.Element => {
       >
         <img
           className={
-            userTurn === 2
+            currentPlayer === 2
               ? `h-20 w-20 flex-none top-0 rounded-full bg-gray-50 ml-auto mr-1 mt-1 ring-4 ring-red-600`
               : `h-20 w-20 flex-none top-0 rounded-full bg-gray-50 ml-auto`
           }
