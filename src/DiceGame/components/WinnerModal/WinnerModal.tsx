@@ -1,6 +1,7 @@
-import { Fragment, useRef } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { TPlayer } from "../../../types";
+import confetti from "canvas-confetti";
 
 interface IWinnerModalProps {
   open: boolean;
@@ -14,6 +15,10 @@ const WinnerModal = ({
   winners,
 }: IWinnerModalProps): JSX.Element => {
   const cancelButtonRef = useRef(null);
+
+  useEffect(() => {
+    confetti();
+  }, []);
 
   return (
     <Transition.Root show={open} as={Fragment}>

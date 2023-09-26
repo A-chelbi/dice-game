@@ -285,11 +285,13 @@ const Dice: React.FC = (): JSX.Element => {
       <GameSettings register={register} />
 
       {/* Winner(s) Modal */}
-      <WinnerModal
-        open={winnerModalOpen}
-        setOpen={setwinnerModalOpen}
-        winners={winners}
-      />
+      {winnerModalOpen && (
+        <WinnerModal
+          open={winnerModalOpen}
+          setOpen={setwinnerModalOpen}
+          winners={winners}
+        />
+      )}
     </div>
   );
 };
