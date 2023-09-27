@@ -1,17 +1,32 @@
-import { THistory } from "../../../types";
+import { TPlayer } from "../../../types";
 
 interface IHistoryProps {
-  history: THistory;
+  players: TPlayer[];
 }
 
-const History = ({ history }: IHistoryProps): JSX.Element => {
+const History = ({ players }: IHistoryProps): JSX.Element => {
   return (
     <div className="mt-5">
-      <ul>
-        {history.map((item) => (
-          <li key={item.id}>{item.text}</li>
-        ))}
-      </ul>
+      <div className="relative overflow-x-auto shadow-md sm:rounded-lg w-[32rem] m-auto">
+        <table className="w-full text-sm text-left text-gray-500 ">
+          <thead>
+            <tr>
+              <th>Joueur</th>
+              <th>score</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {players.map((player) => (
+              <tr key={player.id}>
+                <td>{player.name} </td>
+                <td>{player.score} </td>
+                <td>{player.total}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
