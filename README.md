@@ -30,13 +30,13 @@ cd dice-game
 Install all dependencies
 
 ```sh
-yarn install
+npm install
 ```
 
 Run development enviroment
 
 ```sh
-yarn start
+npm start
 ```
 
 Runs the app in the development mode.\
