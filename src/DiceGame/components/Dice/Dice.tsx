@@ -9,7 +9,7 @@ import DiceImage6 from "../../../images/dice6.svg";
 
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { IFormInput, THistory, TPlayer } from "../../../types";
+import { IFormInput, TPlayer } from "../../../types";
 import DesignElementTopLeft from "../DesigneElements/DesignElementTopLeft";
 import DesignElementBottom from "../DesigneElements/DesignElementBottom";
 import History from "../History/History";
@@ -60,6 +60,8 @@ const Dice: React.FC = (): JSX.Element => {
    * Generate random numbers from 1 to 6 for each Dice
    * Calculate the current score and append it to the current player
    * Calculate the total score for each player
+   * Update rounds count
+   * Get winner(s)
    */
   const handleRoll = () => {
     // Generate random number
@@ -99,7 +101,7 @@ const Dice: React.FC = (): JSX.Element => {
 
   /* Finish the game Game */
   const handleFinishGame = () => {
-    setIsDisabled(true);
+    setIsDisabled(true); // Disable Dice roll button
 
     setTimeout(() => {
       const { maxWinners } = getWinner(players);
@@ -126,7 +128,7 @@ const Dice: React.FC = (): JSX.Element => {
 
   const getWinner = (players: TPlayer[]) => {
     let maxWinners = [];
-    let max = -13;
+    let max = -100;
 
     for (let i = 0; i < players.length; ++i) {
       if (players[i].total < max) continue;
@@ -151,6 +153,7 @@ const Dice: React.FC = (): JSX.Element => {
     setPlayers(players);
   }, [numbOfUsersValue]);
 
+  // Todo: make players ui (name/image) dynamic
   return (
     <div className="relative isolate px-6 pt-14 lg:px-8">
       <DesignElementTopLeft />

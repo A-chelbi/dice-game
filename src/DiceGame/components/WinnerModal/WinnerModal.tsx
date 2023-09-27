@@ -20,6 +20,7 @@ const WinnerModal = ({
     confetti();
   }, []);
 
+  // Todo: make it prettier when there is multiple winners
   return (
     <Transition.Root show={open} as={Fragment}>
       <Dialog
